@@ -1,0 +1,109 @@
+# imports
+import discord
+import os
+import requests
+import json
+import random
+from replit import db
+from keep_alive import keep_alive 
+
+
+
+#connection to discord
+client = discord.Client()
+
+
+#greetings
+words_greeting = ["Hi", "hello", "hey", "whats up", "good day", "hola", "holaa", "buenas", "buenass", "buenasss", "Hello", "Hey", "Whats up", "Good day", "Hola", "Holaa", "Buenas", "Buenass"]
+greeting_response = ["Hello!", "Whats up my man.", "Hi!", "Hola mi amigo.", "Cuanto tiempo!", "¿Otra vez tu?", "¿You again?"]
+
+#howareyou
+words_howareyou = ["how are you", "How are you", "como estas", "Como estas", "Cómo estás", "cómo estás", "how are you doing", "How are you doing", "que tal", "Que tal", "how is everything", "How is everything", "como va todo", "Como va todo"]
+howareyou_responses = ["Muy bien, ¿y tu?", "Good, thanks for asking.", "Perfect!", "Como siempre, aqui estamos."]
+
+#cuentame algo
+words_tellme = ["tell me something", "Tell me something", "cuentame algo", "cúentame algo", "Cúentame algo", "Cuentame algo", "talk to me", "Talk to me", "dime algo", "Dime algo", "cuentame", "Cuentame", "cúentame", "Cúentame"]
+cuentame_responses = ["Según el Instituto Kinsey, la erección de pene más larga de la que se tenga registro midió 39 centímetros. La más corta, fue de 4.5 centímetros, 0.5 centímetros mas corta que la tuya", "A man can reduce his chances of getting prostate cancer by having at least four orgasms a week. You have nothing to worry about.", "Armadillo shells are bulletproof. In fact, one Texas man was hospitalized when a bullet he shot at an armadillo ricocheted off the animal and hit him in the jaw.", "Thanks to 3D printing, NASA can basically “email” tools to astronauts", "Human noses and ears keep getting bigger, even when the rest of the body’s growth has come to a halt.", "No number before 1,000 contains the letter A", "Movie trailers originally played after the movie.", "Bananas glow blue under black lights", "Humans are the only animals that blush.", "A pharaoh once lathered his slaves in honey to keep bugs away from him.", "Whale songs can be used to map out the ocean floor.", "Los nazis quemaron todos los libros de Sigmund Freud. Cuando se enteró, el conocido psicólogo “alabó” el progreso: “En la Edad Media me habrían quemado a mi. Ahora están contentos con quemar mis libros”.", "En 2015, cuando la Reina Isabel II de Inglaterra visitó el set de rodaje de “Juego de Tronos” rechazó sentarse en el Trono de Hierro porque, según el protocolo, como reina tiene prohibido sentarse en un trono extranjero.", "Hay varias especies de animales que tienen la característica de ser monógamos, es decir, que se aparean toda la vida con la misma pareja. Los caballitos de mar son una de ellas. Pero hay otro dato curioso al respecto: el macho de la pareja es quien lleva las crías durante el período de gestación.", "Los escorpiones son los únicos animales que se suicidan. Lo hacen una vez que no pueden escapar de una situación de peligro; muy rara vez los mata otro animal. Siempre son ellos los que terminan con su vida."]
+
+#farewell
+words_goodbye = ["good bye", "adios", "Good bye", "Adios", "Adiós", "adiós", "buenas noches", "Buenas noches", "Good night", "good night", "hasta luego", "Hasta luego", "nos vemos", "Nos vemos", "Nanit", "nanit", "See you", "see you", "Bye bye", "bye bye"]
+goodbye_responses = ["Bye bye!", "Finally, bye!", "See you later.", "Hasta luego!", "Nos vemos!", "Adiós", "I thought you were not going to say good bye this time..."]
+
+#assistance
+mike_words = ["mike", "Mike", "Wazowski", "wazowski"]
+mike_response = ["What?", "What do you want?", "Here we go again. What?", "Yes?"]
+
+#quote api
+def get_quote():
+  response = requests.get("https://zenquotes.io/api/random")
+  json_data = json.loads(response.text) 
+  quote = json_data [0]['q'] + " -" + json_data [0]['a'] 
+  return (quote) 
+
+#catfact api
+def get_cat():
+  response = requests.get("https://catfact.ninja/fact") 
+  json_data = json.loads(response.text)
+  cat = json_data
+  return (cat)
+
+#responding or nor
+if "responding" not in db.keys():
+  db["responding"] = True
+
+#log in succesful
+@client.event
+async def on_ready():
+  print('We have logged in as {0.user}'.format(client)) 
+
+# responses
+@client.event 
+async def on_message(message):
+  if message.author == client.user:
+    return
+
+# starts with
+  if message.content.startswith('help'):
+    await message.channel.send('Here is the list of my commands: !responding true - I will respond to what I can. !responding false - I will not respond. quote - interesting random quotes. cat - interesting random cat facts.') 
+
+  if db ["responding"]:
+#Quote
+   if message.content.startswith('quote'):
+    quote = get_quote()
+    await message.channel.send(quote) 
+
+#cat
+   if message.content.startswith('cat'):
+    cat = get_cat()
+    await message.channel.send(cat)
+
+# Random response
+   if any(word in message.content for word in words_greeting):
+    await message.channel.send(random.choice (greeting_response))
+
+   if any(word in message.content for word in words_howareyou):
+    await message.channel.send(random.choice (howareyou_responses))
+
+   if any(word in message.content for word in words_tellme):
+    await message.channel.send(random.choice (cuentame_responses))
+
+   if any(word in message.content for word in words_goodbye):
+    await message.channel.send(random.choice (goodbye_responses))
+
+   if any(word in message.content for word in mike_words):
+    await message.channel.send(random.choice (mike_response))
+
+#on or off
+  if message.content.startswith("!responding"):
+    value = message.content.split("!responding ",1)[1]
+
+    if value.lower() == "true":
+      db["responding"] = True
+      await message.channel.send("Responding is on.")
+
+    if value.lower() == "false":
+      db["responding"] = False
+      await message.channel.send("Responding is off.")
+
+keep_alive()
+client.run(os.environ['TOKEN'])
